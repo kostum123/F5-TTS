@@ -46,6 +46,7 @@ class Trainer:
         accelerate_kwargs: dict = dict(),
         ema_kwargs: dict = dict(),
         bnb_optimizer: bool = False,
+        use_checkpointing: bool = False,
     ):
         ddp_kwargs = DistributedDataParallelKwargs(find_unused_parameters=True)
 
@@ -268,7 +269,7 @@ class Trainer:
                         self.accelerator.log({"duration loss": dur_loss.item()}, step=global_step)
 
                     loss, cond, pred = self.model(
-                        mel_spec, text=text_inputs, lens=mel_lengths, noise_scheduler=self.noise_scheduler
+                        mel_spec, text=text_inputs, lens=mel_lengths, noise_scheduler=self.noise_scheduler, use_checkpointing=self.use_checkpointing
                     )
                     self.accelerator.backward(loss)
 

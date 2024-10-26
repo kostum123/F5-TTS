@@ -34,15 +34,17 @@ num_warmup_updates = 20000  # warmup steps
 save_per_updates = 50000  # save checkpoint per steps
 last_per_steps = 5000  # save last checkpoint per steps
 
+use_checkpointing = True  # Enable gradient checkpointing
+
 # model params
 if exp_name == "F5TTS_Base":
     wandb_resume_id = None
     model_cls = DiT
-    model_cfg = dict(dim=1024, depth=22, heads=16, ff_mult=2, text_dim=512, conv_layers=4)
+    model_cfg = dict(dim=1024, depth=22, heads=16, ff_mult=2, text_dim=512, conv_layers=4, use_checkpointing=use_checkpointing)
 elif exp_name == "E2TTS_Base":
     wandb_resume_id = None
     model_cls = UNetT
-    model_cfg = dict(dim=1024, depth=24, heads=16, ff_mult=4)
+    model_cfg = dict(dim=1024, depth=24, heads=16, ff_mult=4, use_checkpointing=use_checkpointing)
 
 
 # ----------------------------------------------------------------------- #

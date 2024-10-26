@@ -13,6 +13,7 @@ from typing import Literal
 import torch
 from torch import nn
 import torch.nn.functional as F
+from torch.utils.checkpoint import checkpoint
 
 from x_transformers import RMSNorm
 from x_transformers.x_transformers import RotaryEmbedding
@@ -108,6 +109,7 @@ class UNetT(nn.Module):
         text_dim=None,
         conv_layers=0,
         skip_connect_type: Literal["add", "concat", "none"] = "concat",
+        use_checkpointing=False,
     ):
         super().__init__()
         assert depth % 2 == 0, "UNet-Transformer's depth should be even."
@@ -127,6 +129,7 @@ class UNetT(nn.Module):
         needs_skip_proj = skip_connect_type == "concat"
 
         self.depth = depth
+        self.use_checkpointing = use_checkpointing
         self.layers = nn.ModuleList([])
 
         for idx in range(depth):
@@ -209,8 +212,12 @@ class UNetT(nn.Module):
                     x = x + skip
 
             # attention and feedforward blocks
-            x = attn(attn_norm(x), rope=rope, mask=mask) + x
-            x = ff(ff_norm(x)) + x
+            if self.use_checkpointing:
+                x = checkpoint(attn, attn_norm(x), rope, mask) + x
+                x = checkpoint(ff, ff_norm(x)) + x
+            else:
+                x = attn(attn_norm(x), rope=rope, mask=mask) + x
+                x = ff(ff_norm(x)) + x
 
         assert len(skips) == 0
 

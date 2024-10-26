@@ -12,6 +12,7 @@ from __future__ import annotations
 import torch
 from torch import nn
 import torch.nn.functional as F
+from torch.utils.checkpoint import checkpoint
 
 from x_transformers.x_transformers import RotaryEmbedding
 
@@ -105,6 +106,7 @@ class DiT(nn.Module):
         text_dim=None,
         conv_layers=0,
         long_skip_connection=False,
+        use_checkpointing=False,
     ):
         super().__init__()
 
@@ -118,6 +120,7 @@ class DiT(nn.Module):
 
         self.dim = dim
         self.depth = depth
+        self.use_checkpointing = use_checkpointing
 
         self.transformer_blocks = nn.ModuleList(
             [DiTBlock(dim=dim, heads=heads, dim_head=dim_head, ff_mult=ff_mult, dropout=dropout) for _ in range(depth)]
@@ -152,7 +155,10 @@ class DiT(nn.Module):
             residual = x
 
         for block in self.transformer_blocks:
-            x = block(x, t, mask=mask, rope=rope)
+            if self.use_checkpointing:
+                x = checkpoint(block, x, t, mask, rope)
+            else:
+                x = block(x, t, mask=mask, rope=rope)
 
         if self.long_skip_connection is not None:
             x = self.long_skip_connection(torch.cat((x, residual), dim=-1))

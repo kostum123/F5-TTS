@@ -255,6 +255,7 @@ def start_training(
     tokenizer_type="pinyin",
     tokenizer_file="",
     mixed_precision="fp16",
+    use_checkpointing=False,
 ):
     global training_process, tts_api
 
@@ -314,7 +315,8 @@ def start_training(
         f"--num_warmup_updates {num_warmup_updates} "
         f"--save_per_updates {save_per_updates} "
         f"--last_per_steps {last_per_steps} "
-        f"--dataset_name {dataset_name}"
+        f"--dataset_name {dataset_name} "
+        f"--use_checkpointing {use_checkpointing}"
     )
     if finetune:
         cmd += f" --finetune {finetune}"
@@ -1079,6 +1081,7 @@ for tutorial and updates check here (https://github.com/SWivid/F5-TTS/discussion
 
             with gr.Row():
                 mixed_precision = gr.Radio(label="mixed_precision", choices=["none", "fp16", "fpb16"], value="none")
+                use_checkpointing = gr.Checkbox(label="Use Gradient Checkpointing", value=False)
                 start_button = gr.Button("Start Training")
                 stop_button = gr.Button("Stop Training", interactive=False)
 
@@ -1103,6 +1106,7 @@ for tutorial and updates check here (https://github.com/SWivid/F5-TTS/discussion
                     tokenizer_type,
                     tokenizer_file,
                     mixed_precision,
+                    use_checkpointing,
                 ],
                 outputs=[txt_info_train, start_button, stop_button],
             )

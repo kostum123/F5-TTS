@@ -46,6 +46,7 @@ class CFM(nn.Module):
         mel_spec_kwargs: dict = dict(),
         frac_lengths_mask: tuple[float, float] = (0.7, 1.0),
         vocab_char_map: dict[str:int] | None = None,
+        use_checkpointing=False,
     ):
         super().__init__()
 
@@ -73,6 +74,9 @@ class CFM(nn.Module):
 
         # vocab map for tokenization
         self.vocab_char_map = vocab_char_map
+
+        # gradient checkpointing
+        self.use_checkpointing = use_checkpointing
 
     @property
     def device(self):
